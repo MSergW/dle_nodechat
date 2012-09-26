@@ -1,0 +1,150 @@
+#nodechat { z-index:1000; display:none; margin:1px; }
+.ui-resizable-helper { border: 2px dotted #00F; }
+#nodechat_head { cursor:move; height:26px; line-height:26px; padding-left:5px; }
+#nodechat_body { padding:3px; }
+#nodechat_icons {margin:0; padding:0; float:right; margin-right:1px;}
+#nodechat_icons li {margin:1px; position:relative; padding:4px 0; cursor:pointer; float:left; list-style:none;}
+#nodechat_icons span.ui-icon {float:left; margin:0 4px;}
+
+.nodechat_user { cursor:pointer; }
+.fc_ugrp_1 { color:#ff0000; }
+.fc_ugrp_2 { color:#CC33CC; }
+.fc_ugrp_3 { color:#3355FF; }
+.fc_ugrp_4 { color:#333333; }
+.fc_ugrp_6 { color:#008000; }
+.fc_ugrp_7 { color:#DAA520; }
+.fc_ugrp_8 { color:#CC9933; }
+.fc_ugrp_9 { color:#505050; }
+.fc_ugrp_10 { color:#8B6914; }
+
+.nodechat_mess { margin-bottom: 3px; }
+.nodechat_date { color: #adadad; cursor:pointer; }
+.nodechat_head { background-color: #e8edf0; padding: 1px 4px; height: 16px; line-height: 16px; font-size:11px;}
+.nodechat_text { padding: 2px 2px 2px 20px; font-size:11px; background: url(images/chatrows.gif) no-repeat 5px 3px; line-height:12px;}
+.nodechat_info { font-weight:bold; color:#fff; padding-left:5px; }
+#nodechat_msg_list .error { background-color:#FF4500; }
+#nodechat_msg_list .notis { background-color:#45FF00; }
+.nodechat_slile { border:none; vertical-align:middle; }
+
+
+.markItUp .markItUpButton1 a { background-image:url(images/bold.png); }
+.markItUp .markItUpButton2 a { background-image:url(images/italic.png); }
+.markItUp .markItUpButton3 a { background-image:url(images/underline.png); }
+.markItUp .markItUpButton4 a { background-image:url(images/link.png); }
+.markItUp .markItUpButton5 a { background-image:url(images/emoticon.png); }
+.markItUp .markItUpButton5 ul a:hover { background-color: #fff; }
+.markItUp .markItUpButton5 ul { width:115px; padding:1px; }
+.markItUp .markItUpButton5 li {
+	border:1px solid white;
+	width:21px;
+	height:25px;
+	overflow:hidden;
+	padding:0px;
+	margin:0px;
+	float:left;
+}
+.markItUp .markItUpButton5 ul a { width:21px; height:25px; }
+.markItUp .markItUpButton5 .smile01 a { background-image:url(/uploads/smiles/01.gif); }
+.markItUp .markItUpButton5 .smile02 a { background-image:url(/uploads/smiles/02.gif); }
+.markItUp .markItUpButton5 .smile03 a { background-image:url(/uploads/smiles/03.gif); }
+.markItUp .markItUpButton5 .smile04 a { background-image:url(/uploads/smiles/04.gif); }
+.markItUp .markItUpButton5 .smile05 a { background-image:url(/uploads/smiles/05.gif); }
+.markItUp .markItUpButton5 .smile06 a { background-image:url(/uploads/smiles/06.gif); }
+.markItUp .markItUpButton5 .smile07 a { background-image:url(/uploads/smiles/07.gif); }
+.markItUp .markItUpButton5 .smile08 a { background-image:url(/uploads/smiles/08.gif); }
+.markItUp .markItUpButton5 .smile09 a { background-image:url(/uploads/smiles/09.gif); }
+.markItUp .markItUpButton5 .smile10 a { background-image:url(/uploads/smiles/10.gif); }
+.markItUp .markItUpButton6 a { background-image:url(images/refresh.png); }
+.markItUp .markItUpButton7 a { background-image:url(images/accept.png); }
+
+
+.markItUp * {
+	margin:0px; padding:0px;
+	outline:none;
+}
+.markItUp a:link,
+.markItUp a:visited {
+	color:#000;
+	text-decoration:none;
+}
+.markItUp  {
+	width:100%;
+}
+.markItUpContainer  {background:#FFF url(images/bg-container.png) repeat-x top left; padding:2px 4px 2px 2px;	font:11px Verdana, Arial, Helvetica, sans-serif;}
+.markItUpEditor {
+	font:11px;
+	border:1px solid #cfcfcf;
+	width:100%;
+	height:36px;
+	clear:both;
+	line-height:16px;
+	overflow:auto;
+}
+/***************************************************************************************/
+/* first row of buttons */
+.markItUpHeader ul li	{
+	list-style:none;
+	float:left;
+	position:relative;
+}
+.markItUpHeader ul li ul{
+	display:none;
+}
+.markItUpHeader ul li:hover > ul{ display:block; }
+.markItUpHeader ul .markItUpDropMenu {
+	background:transparent url(images/menu.png) no-repeat 115% 50%;
+	margin-right:5px;
+}
+.markItUpHeader ul .markItUpDropMenu li {
+	margin-right:0px;
+}
+.markItUpHeader ul .markItUpSeparator {
+	margin:0 10px;
+	width:1px;
+	height:16px;
+	overflow:hidden;
+	background-color:#CCC;
+}
+.markItUpHeader ul ul .markItUpSeparator {
+	width:auto; height:1px;
+	margin:0px;
+}
+/* next rows of buttons */
+.markItUpHeader ul ul {
+	display:none;
+	position:absolute;
+	top:18px;
+	left:-50px;
+	background:#F5F5F5;
+	border:1px solid #3C769D;
+	height:inherit;
+}
+.markItUpHeader ul ul li {
+	float:none;
+	border-bottom:1px solid #3C769D;
+}
+.markItUpHeader ul ul .markItUpDropMenu { background:#F5F5F5 url(images/submenu.png) no-repeat 100% 50%; }
+/* next rows of buttons */
+.markItUpHeader ul ul ul {
+	position:absolute;
+	top:-1px; left:150px;
+}
+.markItUpHeader ul ul ul li { float:none; }
+.markItUpHeader ul a {
+	display:block;
+	width:16px; height:16px;
+	text-indent:-10000px;
+	background-repeat:no-repeat;
+	padding:3px;
+	margin:0px;
+}
+.markItUpHeader ul ul a {
+	display:block;
+	padding-left:0px;
+	text-indent:0;
+	width:120px;
+}
+.markItUpHeader ul ul a:hover  {
+	color:#FFF;
+	background-color:#3C769D;
+}
