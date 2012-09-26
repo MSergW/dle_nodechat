@@ -13,14 +13,19 @@ DLE NodeChat - Чат на основе nodejs для CMS DataLife Engine.
 - изменяемые размеры плавающего чата;
 - все настройки чата сохраняются у пользователя в куках;
 
-                    
+
+Модули NodeJS:
+* socket.io
+* express
+* hiredis redis
+* node-mysql
+
 
 Системные требования:
-
-1. VDS/VPS
-2. Остальные требования необходимые для установки и работы NodeJS.
-3. Остальные требования необходимые для установки и работы DLE.
-4. jQuery + jQuery UI + jQuery UI CSS
+* VDS/VPS
+* Остальные требования необходимые для установки и работы NodeJS.
+* Остальные требования необходимые для установки и работы DLE.
+* jQuery + jQuery UI + jQuery UI CSS
 
 
 Инструкция по установке: https://github.com/MSergW/dle_nodechat/wiki/Install-DLE-NodeChat
