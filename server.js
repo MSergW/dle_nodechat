@@ -43,7 +43,7 @@ var db = mysql.createConnection({ //параметры подключения к
 });
 
 var messages = [], // массив сообщений
-    member_id = [], // массив пользователей
+    member_id = {}, // объект пользователей
     mess_line = "", // строка со всеми сообщениями
     mess_id = 0; // айди сообщения
 
@@ -92,7 +92,7 @@ io.sockets.on('connection', function (socket) {
 	// *** Получение сообщение *** //
 	socket.on('chat_msg2server', function (msg) {
 		if(member_id[socket.id].restricted==0) {
-			msg = msg.replace(/^\s+/, "").replace(/\s+$/, ""); // удаляем проблемы в начале и конце текста
+			msg = msg.trim(); // удаляем проблемы в начале и конце текста
 			// минимальная длина сообщения
 			if(msg.length < config.mess_length_min) {
 				socket.emit( 'chat_msg2client', {info:'<div class="nodechat_info error">'+lang.msg_min+'</div>'} );
