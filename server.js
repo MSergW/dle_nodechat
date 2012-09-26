@@ -71,9 +71,7 @@ io.sockets.on('connection', function (socket) {
 		if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
 			db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
 				if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
-					redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){
-						socket.emit('chat_join', "true");
-					});
+					redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
 				} else {
 					redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
 				}
@@ -89,13 +87,13 @@ io.sockets.on('connection', function (socket) {
 		var data = html_chat.replace('!MESSAGES!', mess_line);
 		redis.hget(socket.id, "restricted", function (err, row) {
 			if(err) {
-				console.log(err);
+				console.log("err");
 			} else {
 				if( +row>0 ) data = data.replace('!TEXTAREA!', lang.restricted);
 				else if( +row==0 ) data = data.replace('!TEXTAREA!', '<textarea id="nodechat_input"></textarea>');
 				else data = data.replace('!TEXTAREA!', lang.guest);
+				socket.emit('chat_init', data);
 			}
-			socket.emit('chat_init', data);
 		});
 	});
 
@@ -103,7 +101,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('chat_msg2server', function (msg) {
 		redis.hgetall(socket.id, function (err, row) {
 			if(err) {
-				console.log(err);
+				console.log("err");
 			} else {
 				if( +row.restricted==0) {
 					msg = msg.trim(); // удаляем проблемы в начале и конце текста
@@ -158,7 +156,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('del_msg', function(id) {
 		redis.hget(socket.id, "user_group", function (err, row) {
 			if(err) {
-				console.log(err);
+				console.log("err");
 			} else {
 				if( +row==1 || +row==2 ) {
 					// удаляем сообщение
