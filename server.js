@@ -21,6 +21,7 @@ var redis = require("redis").createClient();
 redis.on("error", function (err) {
     console.log("Error " + err);
 });
+redis.flushall();
 
 var func = require('./functions'), // подключаем файл с функциями
     lang = require('./language'), // подключаем файл с языковыми переменными
@@ -38,6 +39,7 @@ io.enable('browser client etag');         // apply etag caching logic based on v
 io.enable('browser client gzip');         // gzip the file
 io.set('log level', 0); // логировать только ошибки
 //io.set('transports', ['websocket', 'xhr-polling', 'jsonp-polling', 'htmlfile', 'flashsocket' ]); // enable all transports
+io.set('transports', ['flashsocket', 'htmlfile', 'xhr-polling', 'jsonp-polling']);
 
 var mysql = require('mysql'); // подключаем модуль для работы с MySQL
 var db = mysql.createConnection({ //параметры подключения к базе
@@ -85,7 +87,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('join2chat', function() {
 		socket.join('chat');
 		var data = html_chat.replace('!MESSAGES!', mess_line);
-		redis.hget(socket.id, "restricted", function (err, row) {
+		redis.hget(socket.id, "restricted", function(err, row) {
 			if(err) {
 				console.log("err");
 			} else {
