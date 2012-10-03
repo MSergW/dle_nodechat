@@ -27,10 +27,10 @@ var func = require('./functions'), // подключаем файл с функ�
     lang = require('./language'), // подключаем файл с языковыми переменными
     config = require('./config'); // подключаем файл с настройками
 
+var io = require('socket.io');
 var app = express(),
-    http = require('http'),
-    server = http.createServer(app),
-    io = require('socket.io').listen(server);
+    server = require('http').createServer(app),
+    io = io.listen(server);
 
 server.listen(config.port);
 
@@ -39,7 +39,7 @@ io.enable('browser client etag');         // apply etag caching logic based on v
 io.enable('browser client gzip');         // gzip the file
 io.set('log level', 0); // логировать только ошибки
 //io.set('transports', ['websocket', 'xhr-polling', 'jsonp-polling', 'htmlfile', 'flashsocket' ]); // enable all transports
-io.set('transports', ['flashsocket', 'htmlfile', 'xhr-polling', 'jsonp-polling']);
+//io.set('transports', [ 'jsonp-polling', 'xhr-polling', 'htmlfile']);
 
 var mysql = require('mysql'); // подключаем модуль для работы с MySQL
 var db = mysql.createConnection({ //параметры подключения к базе
