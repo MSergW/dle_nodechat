@@ -22,6 +22,9 @@ redis.on("error", function (err) {
     console.log("Error " + err);
 });
 redis.flushall();
+redis.on("error", function (err) {
+	console.log("Error " + err);
+});
 
 var func = require('./functions'), // подключаем файл с функциями
     lang = require('./language'), // подключаем файл с языковыми переменными
@@ -39,7 +42,10 @@ io.enable('browser client etag');         // apply etag caching logic based on v
 io.enable('browser client gzip');         // gzip the file
 io.set('log level', 0); // логировать только ошибки
 //io.set('transports', ['websocket', 'xhr-polling', 'jsonp-polling', 'htmlfile', 'flashsocket' ]); // enable all transports
-//io.set('transports', [ 'jsonp-polling', 'xhr-polling', 'htmlfile']);
+io.set('heartbeat interval', 45);
+io.set('heartbeat timeout', 120);
+io.set('polling duration', 20);
+io.set('close timeout',120);
 
 var mysql = require('mysql'); // подключаем модуль для работы с MySQL
 var db = mysql.createConnection({ //параметры подключения к базе
@@ -58,31 +64,41 @@ var html_chat = fs.readFileSync( __dirname + '/html/chat.html', 'utf-8');
 io.sockets.on('connection', function (socket) {
 	// ****** Идентификация пользователя ****** //
 	var cookies = func.parse_cookies(socket.handshake.headers.cookie);
-	fs.readFile( config.dir_phpsess+cookies.PHPSESSID, 'utf-8', function (err, data) {
-		var dle_user_id, dle_password, sessions;
-		// *** Идентификация по данным куков *** //
-		if(err) {
-			dle_user_id = cookies.dle_user_id;
-			dle_password = cookies.dle_password;
-		// *** Идентификация по данным сессии *** //
-		} else {
-			sessions = func.parse_session( data );
-			dle_user_id = sessions.dle_user_id;
-			dle_password = sessions.dle_password;
-		}
-		if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
-			db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
-				if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
-					redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
-				} else {
-					redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-				}
-			});
-		} else {
-			redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-		}
-	});
+	var dle_user_id, dle_password, sessions;
+	if(parseInt(cookies.dle_user_id)>0 && cookies.dle_password!=0 ) {
+		db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(cookies.dle_user_id), function(err, rows) {
+			if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(cookies.dle_password).digest("hex") ) {
+				redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
+			} else {
+				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+			}
+		});
+	} else {
+		//console.log(cookies.PHPSESSID);
+		fs.readFile( config.dir_phpsess+cookies.PHPSESSID, 'utf-8', function (err, data) {
+			// *** Идентификация по данным куков *** //
+			if(err) {
+				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+			// *** Идентификация по данным сессии *** //
+			} else {
+				sessions = func.parse_session( data );
+				dle_user_id = sessions.dle_user_id;
+				dle_password = sessions.dle_password;
+			}
 
+			if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
+				db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
+					if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
+						redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
+					} else {
+						redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+					}
+				});
+			} else {
+				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+			}
+		});
+	}
 	// *** Подкючение к комнате чата *** //
 	socket.on('join2chat', function() {
 		socket.join('chat');
