@@ -1,39 +1,39 @@
 var nodechat = ($.cookie("nodechat")) ? $.cookie("nodechat").split("_") : "1_450_275_55_5_1_2".split("_");
 /*
-nodechat[0] - закрыт(0), открыт(1)
-nodechat[1] - высота
-nodechat[2] - ширина
-nodechat[3] - сверху
-nodechat[4] - слева
-nodechat[5] - не фиксирован(0), фиксирован(1)
-nodechat[6] - в странице(0), плавающий(1), авторасположение(2)
+nodechat[0] - Р·Р°РєСЂС‹С‚(0), РѕС‚РєСЂС‹С‚(1)
+nodechat[1] - РІС‹СЃРѕС‚Р°
+nodechat[2] - С€РёСЂРёРЅР°
+nodechat[3] - СЃРІРµСЂС…Сѓ
+nodechat[4] - СЃР»РµРІР°
+nodechat[5] - РЅРµ С„РёРєСЃРёСЂРѕРІР°РЅ(0), С„РёРєСЃРёСЂРѕРІР°РЅ(1)
+nodechat[6] - РІ СЃС‚СЂР°РЅРёС†Рµ(0), РїР»Р°РІР°СЋС‰РёР№(1), Р°РІС‚РѕСЂР°СЃРїРѕР»РѕР¶РµРЅРёРµ(2)
 */
 $(function(){
-	// *** подключение к серверу чата *** //
+	// *** РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє СЃРµСЂРІРµСЂСѓ С‡Р°С‚Р° *** //
 	socket = io.connect('http://SITE.COM:9090');
 
-	// *** автоматические расположение на странице при первом запуске *** //
+	// *** Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРёРµ СЂР°СЃРїРѕР»РѕР¶РµРЅРёРµ РЅР° СЃС‚СЂР°РЅРёС†Рµ РїСЂРё РїРµСЂРІРѕРј Р·Р°РїСѓСЃРєРµ *** //
 	if(nodechat[6]==2) {
 		nodechat[6] = ($(window).width() >= 1550) ? 1 : 0;
 	}
 
-	// *** Кнопка чата *** //
+	// *** РљРЅРѕРїРєР° С‡Р°С‚Р° *** //
 	$('#nodechat_btn').click(function() {
-		// *** если чат включен, то выключаем *** //
+		// *** РµСЃР»Рё С‡Р°С‚ РІРєР»СЋС‡РµРЅ, С‚Рѕ РІС‹РєР»СЋС‡Р°РµРј *** //
 		if(nodechat[0]==1) {
 			nodechat_close();
 			nodechat[0]=0;
-		// *** если чат выключен, то включаем *** //
+		// *** РµСЃР»Рё С‡Р°С‚ РІС‹РєР»СЋС‡РµРЅ, С‚Рѕ РІРєР»СЋС‡Р°РµРј *** //
 		} else {
 			nodechat_open();
 			nodechat[0]=1;
 		}
-		// *** сохраняем настройки *** //
+		// *** СЃРѕС…СЂР°РЅСЏРµРј РЅР°СЃС‚СЂРѕР№РєРё *** //
 		nodechat_setings_save();
 		return false;
 	});
 
-	// *** подключение к чату *** //
+	// *** РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє С‡Р°С‚Сѓ *** //
 	socket.on('chat_join', function () {
 		if(nodechat[0]=="1") {
 			nodechat_open();
@@ -41,8 +41,9 @@ $(function(){
 		}
 	});
 
-	// *** инициализация чата *** //
+	// *** РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ С‡Р°С‚Р° *** //
 	socket.on('chat_init', function (data) {
+		$('#nodechat').remove();
 		if(nodechat[6]==1) {
 			$('body').prepend(data);
 		} else {
@@ -51,7 +52,7 @@ $(function(){
 		nodechat_init();
 	});
 
-	// *** получение сообщения *** //
+	// *** РїРѕР»СѓС‡РµРЅРёРµ СЃРѕРѕР±С‰РµРЅРёСЏ *** //
 	socket.on('chat_msg2client', function (data) {
 		if(data.info) {
 			$('#nodechat_msg_list').prepend(data.info);
@@ -71,50 +72,50 @@ $(function(){
 	});
 });
 
-// *** Открытие чата *** //
+// *** РћС‚РєСЂС‹С‚РёРµ С‡Р°С‚Р° *** //
 function nodechat_open() {
-	// *** подключение к комнате чата *** //
+	// *** РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РєРѕРјРЅР°С‚Рµ С‡Р°С‚Р° *** //
 	socket.emit('join2chat');
 	$('#nodechat_btn').addClass("onChat");
 }
 
-// *** Закрытие чата *** //
+// *** Р—Р°РєСЂС‹С‚РёРµ С‡Р°С‚Р° *** //
 function nodechat_close() {
-	// *** отключение от комнаты чата *** //
+	// *** РѕС‚РєР»СЋС‡РµРЅРёРµ РѕС‚ РєРѕРјРЅР°С‚С‹ С‡Р°С‚Р° *** //
 	socket.emit('leave_chat');
 	$('#nodechat_btn').removeClass("onChat");
 	$('#nodechat').hide("slide", 100, function(){ $(this).remove(); });
 }
 
-// *** Местоположения окна чата *** //
+// *** РњРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёСЏ РѕРєРЅР° С‡Р°С‚Р° *** //
 function nodechat_location() {
 
 }
 
-// *** Сохранение настроек в cookie *** //
+// *** РЎРѕС…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє РІ cookie *** //
 function nodechat_setings_save() {
 	$.cookie("nodechat", nodechat.join("_"), { expires:365, path:'/' });
 }
 
-// *** Инициализация окна чата *** //
+// *** РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РѕРєРЅР° С‡Р°С‚Р° *** //
 function nodechat_init() {
 	nodechat_input();
 	if(dle_group==5) $('a').remove('.nodechat_pm');
 	if(dle_group>2) $('a').remove('.nodechat_mess_del');
 	if(nodechat[6]==1) {
-		// *** высота и ширина *** //
+		// *** РІС‹СЃРѕС‚Р° Рё С€РёСЂРёРЅР° *** //
 		$('#nodechat').css({height:nodechat[1]}).css({width:nodechat[2]});
 		nodechat_messheight();
-		// *** фиксированный *** //
+		// *** С„РёРєСЃРёСЂРѕРІР°РЅРЅС‹Р№ *** //
 		if(nodechat[5]==1) {
 			$('#nodechat').css({position:"fixed"});
 			$('#nodechat_icons_unlocked').hide();
-		// *** плавающий *** //
+		// *** РїР»Р°РІР°СЋС‰РёР№ *** //
 		} else {
 			$('#nodechat').css({position:"absolute"});
 			$('#nodechat_icons_locked').hide();
 		}
-		// *** изменять размер *** //
+		// *** РёР·РјРµРЅСЏС‚СЊ СЂР°Р·РјРµСЂ *** //
 		$('#nodechat').resizable({
 			minHeight: 200,
 			minWidth: 237,
@@ -127,7 +128,7 @@ function nodechat_init() {
 				nodechat_setings_save();
 			}
 		})
-		// *** перемещать *** //
+		// *** РїРµСЂРµРјРµС‰Р°С‚СЊ *** //
 		.draggable({
 			handle: '#nodechat_head',
 			containment: 'document',
@@ -138,7 +139,7 @@ function nodechat_init() {
 				nodechat_setings_save();
 			}
 		})
-		// *** позиция сверху слева *** //
+		// *** РїРѕР·РёС†РёСЏ СЃРІРµСЂС…Сѓ СЃР»РµРІР° *** //
 		.offset({top:nodechat[3], left:nodechat[4]})
 		.show("slide", 100);
 	} else {
@@ -149,13 +150,13 @@ function nodechat_init() {
 		$('#nodechat').show("slide", 100);
 	}
 
-	// ****** Кнопки ****** //
-	// *** подсветка кнопок *** //
+	// ****** РљРЅРѕРїРєРё ****** //
+	// *** РїРѕРґСЃРІРµС‚РєР° РєРЅРѕРїРѕРє *** //
 	$('#nodechat_icons li').hover(
 		function() { $(this).addClass("ui-state-hover"); },
 		function() { $(this).removeClass("ui-state-hover"); }
 	);
-	// *** кнопка: разблокировать *** //
+	// *** РєРЅРѕРїРєР°: СЂР°Р·Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ *** //
 	$('#nodechat_icons_locked').click(function(){
 		nodechat[5] = 0;
 		$('#nodechat').css({position:"absolute"});
@@ -164,7 +165,7 @@ function nodechat_init() {
 		nodechat_setings_save();
 		return false;
 	});
-	// *** кнопка: заблокировать *** //
+	// *** РєРЅРѕРїРєР°: Р·Р°Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ *** //
 	$('#nodechat_icons_unlocked').click(function(){
 		$('#nodechat').css({position:"fixed"});
 		$('#nodechat_icons_unlocked').hide();
@@ -173,14 +174,14 @@ function nodechat_init() {
 		nodechat_setings_save();
 		return false;
 	});
-	// *** кнопка: закрыть *** //
+	// *** РєРЅРѕРїРєР°: Р·Р°РєСЂС‹С‚СЊ *** //
 	$('#nodechat_icons_close').click(function(){
 		nodechat_close();
 		nodechat[0]= 0;
 		nodechat_setings_save();
 		return false;
 	});
-	// *** кнопка: места расположения *** //
+	// *** РєРЅРѕРїРєР°: РјРµСЃС‚Р° СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ *** //
 	$('#nodechat_icons_newwin').click(function() {
 		if(nodechat[6]=="1") {
 			nodechat[6] = 0;
@@ -195,12 +196,12 @@ function nodechat_init() {
 	});
 }
 
-// *** высота блока сообщений *** //
+// *** РІС‹СЃРѕС‚Р° Р±Р»РѕРєР° СЃРѕРѕР±С‰РµРЅРёР№ *** //
 function nodechat_messheight() {
 	$('#nodechat_msg_list').css({height:nodechat[1]-106+'px'});
 }
 
-// *** инициализация бб-кодов *** //
+// *** РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Р±Р±-РєРѕРґРѕРІ *** //
 function nodechat_input() {
 	$('#nodechat_input').markItUp({
 		resizeHandle: false,
@@ -227,35 +228,35 @@ function nodechat_input() {
 			{name:'Send [Enter]', beforeInsert:function() { nodechat_mess_send(); } }
 		]
 	});
-	ctrl = false; // признак нажатой клавиши "Ctrl"
+	ctrl = false; // РїСЂРёР·РЅР°Рє РЅР°Р¶Р°С‚РѕР№ РєР»Р°РІРёС€Рё "Ctrl"
 	$('#nodechat_input').keydown(function(event) {
 		switch(event.which) {
-			case 13: return false; // отключаем стандартное поведение
-			case 17: ctrl = true; // клавиша Ctrl нажата и удерживается
+			case 13: return false; // РѕС‚РєР»СЋС‡Р°РµРј СЃС‚Р°РЅРґР°СЂС‚РЅРѕРµ РїРѕРІРµРґРµРЅРёРµ
+			case 17: ctrl = true; // РєР»Р°РІРёС€Р° Ctrl РЅР°Р¶Р°С‚Р° Рё СѓРґРµСЂР¶РёРІР°РµС‚СЃСЏ
 		}
 	});
 	$('#nodechat_input').keyup(function(event) {
 		switch (event.which) {
 			case 13:
-				if (!ctrl) { // если ctrl не нажат
-					nodechat_mess_send(); // отправляем
+				if (!ctrl) { // РµСЃР»Рё ctrl РЅРµ РЅР°Р¶Р°С‚
+					nodechat_mess_send(); // РѕС‚РїСЂР°РІР»СЏРµРј
 					return false;
 				}
 				$('#nodechat_input').focus().val($('#nodechat_input').val()+'\r\n');
 			break;
-			case 17: ctrl = false; // Ctrl отпустили
+			case 17: ctrl = false; // Ctrl РѕС‚РїСѓСЃС‚РёР»Рё
 		}
 	});
 }
 
 function memchat_text_convert() {
 	var arr_en = new Array("A","a","B","b","C","c","D","d","E","e","F","f","G","g","H","h","I","i","J","j","K","k","L","l","M","m","N","n","O","o","P","p","Q","q","R","r","S","s","T","t","U","u","V","v","W","w","X","x","Y","y","Z","z","<",",",">",":",";","\"","\'","\{","\}");
-	var arr_ru = new Array("Ф","ф","И","и","С","с","В","в","У","у","А","а","П","п","Р","р","Ш","ш","О","о","Л","л","Д","д","Ь","ь","Т","т","Щ","щ","З","з","Й","й","К","к","Ы","ы","Е","е","Г","г","М","м","Ц","ц","Ч","ч","Н","н","Я","я","Б","б","Ю","Ж","ж","Э","э","Х","Ъ");
+	var arr_ru = new Array("Р¤","С„","Р","Рё","РЎ","СЃ","Р’","РІ","РЈ","Сѓ","Рђ","Р°","Рџ","Рї","Р ","СЂ","РЁ","С€","Рћ","Рѕ","Р›","Р»","Р”","Рґ","Р¬","СЊ","Рў","С‚","Р©","С‰","Р—","Р·","Р™","Р№","Рљ","Рє","Р«","С‹","Р•","Рµ","Р“","Рі","Рњ","Рј","Р¦","С†","Р§","С‡","Рќ","РЅ","РЇ","СЏ","Р‘","Р±","Р®","Р–","Р¶","Р­","СЌ","РҐ","РЄ");
 
 	var textout = $('#nodechat_input').val();
-	textout = textout.replace(/\./g, "ю");
-	textout = textout.replace(/\[/g, "х");
-	textout = textout.replace(/\]/g, "ъ");
+	textout = textout.replace(/\./g, "СЋ");
+	textout = textout.replace(/\[/g, "С…");
+	textout = textout.replace(/\]/g, "СЉ");
 
 	for(var i=0; i<arr_en.length; i++){
 		var litnow = new RegExp(arr_en[i], "g");
