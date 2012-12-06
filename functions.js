@@ -67,8 +67,17 @@ function parseSmile( text ) {
 	text = text.replace(/;\)/g, '<img src="/uploads/smiles/07.gif" class="nodechat_slile">');
 	text = text.replace(/:\'\(/g, '<img src="/uploads/smiles/08.gif" class="nodechat_slile">');
 	text = text.replace(/:!/g, '<img src="/uploads/smiles/09.gif" class="nodechat_slile">');
-	text = text.replace(/:no:/g, '<img src="/uploads/smiles/09.gif" class="nodechat_slile">');
+	text = text.replace(/:no:/g, '<img src="/uploads/smiles/10.gif" class="nodechat_slile">');
 	return text;
+}
+
+// *** Формирование личного сообщения *** //
+exports.msg_pm_format = function(msg) {
+	// *** Парсим ББ-коды *** //
+	msg = parseBBCode(msg);
+	// *** Смайлы *** //
+	msg = parseSmile(msg);
+	return msg;
 }
 
 // *** Формирование сообщения *** //

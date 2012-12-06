@@ -141,7 +141,8 @@ io.sockets.on('connection', function (socket) {
 								db.query('SELECT name, user_id FROM '+config.mysql_prefix+'_users WHERE name='+db.escape(parts[0]), function(err, rows) {
 									if( rows[0] ) {
 										var time = new Date(); // текущее время
-										db.query('INSERT INTO '+config.mysql_prefix+'_pm (subj, text, user, user_from, date, pm_read, folder) VALUES ("'+lang.ls_subj+'", '+db.escape(parts[1])+', "'+rows[0].user_id+'", "'+row.name+'", "'+parseInt( time.getTime()/1000 )+'", "no", "inbox");');
+										var message = func.msg_pm_format(parts[1]);
+										db.query('INSERT INTO '+config.mysql_prefix+'_pm (subj, text, user, user_from, date, pm_read, folder) VALUES ("'+lang.ls_subj+'", '+db.escape(message)+', "'+rows[0].user_id+'", "'+row.name+'", "'+parseInt( time.getTime()/1000 )+'", "no", "inbox");');
 										db.query('UPDATE '+config.mysql_prefix+'_users SET pm_all=pm_all+1, pm_unread=pm_unread+1 WHERE user_id='+rows[0].user_id);
 										socket.emit( 'chat_msg2client', {info:'<div class="nodechat_info notis">'+lang.ls_send+'</div>'} );
 									} else socket.emit( 'chat_msg2client', {info:'<div class="nodechat_info error">'+lang.user_not_found+'</div>'} );
