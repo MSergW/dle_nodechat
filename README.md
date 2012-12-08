@@ -2,6 +2,7 @@ dle_nodechat
 ============
 
 Автор: MSW
+
 Сайт: http://0-web.ru/
 
 DLE NodeChat - Чат на основе nodejs для CMS DataLife Engine.
