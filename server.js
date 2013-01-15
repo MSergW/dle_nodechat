@@ -54,6 +54,7 @@ var db = mysql.createConnection({ //параметры подключения к
 	user     : config.mysql_user,		// имя пользователя
 	password : config.mysql_password,	// пароль базы
 });
+db.query("SET SESSION wait_timeout = 604800;"); // 7 суток таймаут
 
 var messages = [], // массив сообщений
     mess_line = "", // строка со всеми сообщениями
