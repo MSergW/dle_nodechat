@@ -10,7 +10,7 @@ nodechat[6] - в странице(0), плавающий(1), автораспо�
 */
 $(function(){
 	// *** подключение к серверу чата *** //
-	socket = io.connect('http://SITE.COM:9090');
+	socket = io.connect('http://megafile.ws:8282');
 
 	// *** автоматические расположение на странице при первом запуске *** //
 	if(nodechat[6]==2) {
@@ -62,7 +62,12 @@ $(function(){
 				});
 			}, 5000);
 		} else {
-			if(data.del) $('#nodechat_mess_'+data.del).remove();
+			if(data.del) {
+				var ids = data.del.split(', ');
+				for( var id in ids ) {
+					$('#nodechat_mess_'+id).remove();
+				}
+			}
 			if(data.message) {
 				$('#nodechat_msg_list').prepend(data.message);
 				if(dle_group==5) $('a').remove('.nodechat_pm');
