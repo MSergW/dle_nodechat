@@ -1,39 +1,38 @@
 /*
 =====================================================
  Модуль: NodeChat for DLE
- Версия: 1.1
+ Версия: 1.2
 -----------------------------------------------------
  Автор: MSW
  Сайт:  http://0-web.ru/
 -----------------------------------------------------
- Copyright (c) 2012 MSW
+ Copyright (c) 2012-2013 MSW
 =====================================================
  Данный код защищен авторскими правами
 =====================================================
  Файл: server.js
 =====================================================
 */
-var express = require('express'), // подключаем модуль express
-    crypto = require('crypto'), // подключаем модуль для шифрования
+
+var crypto = require('crypto'), // подключаем модуль для шифрования
     fs = require('fs'); // подключаем модуль для работы с файловой системой
 
 var redis = require("redis").createClient();
 redis.on("error", function (err) {
     console.log("Error " + err);
 });
-redis.flushall();
+
 redis.on("error", function (err) {
 	console.log("Error " + err);
 });
 
 var func = require('./functions'), // подключаем файл с функциями
-    lang = require('./language'), // подключаем файл с языковыми переменными
-    config = require('./config'); // подключаем файл с настройками
+    lang = require('./language'),  // подключаем файл с языковыми переменными
+    config = require('./config');  // подключаем файл с настройками
 
-var io = require('socket.io');
-var app = express(),
+var app = require('express')(),
     server = require('http').createServer(app),
-    io = io.listen(server);
+    io = require('socket.io').listen(server);
 
 server.listen(config.port);
 
@@ -41,7 +40,6 @@ io.enable('browser client minification'); // сжатие *.js файлов
 io.enable('browser client etag');         // apply etag caching logic based on version number
 io.enable('browser client gzip');         // gzip the file
 io.set('log level', 0); // логировать только ошибки
-//io.set('transports', ['websocket', 'xhr-polling', 'jsonp-polling', 'htmlfile', 'flashsocket' ]); // enable all transports
 io.set('heartbeat interval', 45);
 io.set('heartbeat timeout', 120);
 io.set('polling duration', 20);
@@ -75,7 +73,6 @@ io.sockets.on('connection', function (socket) {
 			}
 		});
 	} else {
-		//console.log(cookies.PHPSESSID);
 		fs.readFile( config.dir_phpsess+cookies.PHPSESSID, 'utf-8', function (err, data) {
 			// *** Идентификация по данным куков *** //
 			if(err) {
@@ -90,30 +87,35 @@ io.sockets.on('connection', function (socket) {
 			if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
 				db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
 					if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
-						redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
+						redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); redis.expire(socket.id, 300); });
 					} else {
-						redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+						redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); redis.expire(socket.id, 300); });
 					}
 				});
 			} else {
-				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); redis.expire(socket.id, 300); });
 			}
 		});
 	}
 	// *** Подкючение к комнате чата *** //
 	socket.on('join2chat', function() {
 		socket.join('chat');
-		var data = html_chat.replace('!MESSAGES!', mess_line);
-		redis.hget(socket.id, "restricted", function(err, row) {
-			if(err) {
-				console.log("err");
-			} else {
-				if( +row>0 ) data = data.replace('!TEXTAREA!', lang.restricted);
-				else if( +row==0 ) data = data.replace('!TEXTAREA!', '<textarea id="nodechat_input"></textarea>');
-				else data = data.replace('!TEXTAREA!', lang.guest);
-				socket.emit('chat_init', data);
+		redis.get("mess_line",
+			function(err, mess){
+				if(mess==null) mess="";
+				var data = html_chat.replace('!MESSAGES!', mess);
+				redis.hget(socket.id, "restricted", function(err, row) {
+					if(err) {
+						console.log("err");
+					} else {
+						if( +row>0 ) data = data.replace('!TEXTAREA!', lang.restricted);
+						else if( +row==0 ) data = data.replace('!TEXTAREA!', '<textarea id="nodechat_input"></textarea>');
+						else data = data.replace('!TEXTAREA!', lang.guest);
+						socket.emit('chat_init', data);
+					}
+				});
 			}
-		});
+		);
 	});
 
 	// *** Получение сообщение *** //
@@ -150,21 +152,44 @@ io.sockets.on('connection', function (socket) {
 								});
 							}
 						} else {
-							mess_id++; // айди сообщения
-							// *** формирование сообщения *** //
-							var message = func.msg_format(msg, mess_id, row.name, row.user_group);
+							redis.get("mess_id",
+								function(err, mid){
+									if(mid==null) mid=1;
+									var message = func.msg_format(msg, mid, row.name, row.user_group, config.timeShift);
+									redis.hset("message", mid, message,
+										function() {
+											redis.hlen("message",
+												function(err, num) {
+													if(num>config.mess_limit) {
+														redis.hkeys("message",
+															function(err, ids) {
+																ids.sort( function(a,b){return a - b} );
+																ids.splice(-config.mess_limit);
+																io.sockets.in('chat').emit( 'chat_msg2client', {del:ids.join(', ')} );
+																redis.hdel(["message", ids.join(', ')],
+																	function() {
+																		func.mess_line(redis);
+																	}
+																);
+															}
+														);
+													}
+												}
+											);
+										}
+									);
 
-							if(mess_id>config.mess_limit) {
-								var mess_id_del = mess_id - config.mess_limit;
-								delete messages[mess_id_del];
-								io.sockets.in('chat').emit( 'chat_msg2client', {message:message, del:mess_id_del} );
-							} else {
-								io.sockets.in('chat').emit( 'chat_msg2client', {message:message} );
-							}
-							// дописываем сообщение в массив
-							messages[mess_id] = message;
-							// формируем строку всех сообщений
-							mess_line = func.mess_line(messages);
+									io.sockets.in('chat').emit( 'chat_msg2client', {message:message} );
+									redis.get("mess_line",
+										function(err, row) {
+											if(row==null) row="";
+											redis.set("mess_line", message+row);
+										}
+									);
+									mid++;
+									redis.set("mess_id", mid);
+								}
+							);
 						}
 					}
 				}
@@ -179,12 +204,12 @@ io.sockets.on('connection', function (socket) {
 				console.log("err");
 			} else {
 				if( +row==1 || +row==2 ) {
-					// удаляем сообщение
-					delete messages[id];
-					// отправляем всем команду на удаление сообщения
-					io.sockets.in('chat').emit( 'chat_msg2client', {del:id} );
-					// формируем строку всех сообщений
-					mess_line = func.mess_line(messages);
+					redis.hdel("message", id,
+						function() {
+							io.sockets.in('chat').emit( 'chat_msg2client', {del:id} );
+							func.mess_line(redis);
+						}
+					);
 				} else socket.emit( 'chat_msg2client', {info:'<div class="nodechat_info error">'+lang.access_denid+'</div>'} );
 			}
 		});

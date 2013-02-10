@@ -1,7 +1,7 @@
 /*
 =====================================================
  Модуль: NodeChat for DLE
- Версия: 1.1
+ Версия: 1.2
 -----------------------------------------------------
  Автор: MSW
  Сайт:  http://0-web.ru/
@@ -51,8 +51,8 @@ function parseBBCode( text ) {
 	text = text.replace(/\[i\](.*?)\[\/i\]/ig, "<i>$1</i>"); // наклонный текст
 	text = text.replace(/\[u\](.*?)\[\/u\]/ig, "<u>$1</u>"); // подчёркнутый текст
 	text = text.replace(/\[to\](.*?)\[\/to\]/ig, "<b>$1</b>"); // обращение
-	text = text.replace(/\[url\](.*?)\[\/url\]/ig, "<a href=\"$1\">$1</a>"); // ссылка
-	text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/ig, "<a href=\"$1\">$2</a>"); // ссылка
+	text = text.replace(/\[url\](.*?)\[\/url\]/ig, "<a href=\"$1\" target=\"_blank\">$1</a>"); // ссылка
+	text = text.replace(/\[url=(.*?)\](.*?)\[\/url\]/ig, "<a href=\"$1\" target=\"_blank\">$2</a>"); // ссылка
 	return text;
 }
 
@@ -81,7 +81,7 @@ exports.msg_pm_format = function(msg) {
 }
 
 // *** Формирование сообщения *** //
-exports.msg_format = function(msg, mess_id, name, user_group) {
+exports.msg_format = function(msg, mess_id, name, user_group, timeShift) {
 	// *** Парсим ББ-коды *** //
 	msg = parseBBCode(msg);
 
@@ -90,6 +90,7 @@ exports.msg_format = function(msg, mess_id, name, user_group) {
 
 	// формирование строки времени
 	time = new Date(); // текущее время
+	time.setHours(time.getHours()+timeShift);
 	time_line = addZero(time.getDate())+'.'+addZero(time.getMonth()+1)+' '+addZero(time.getHours())+':'+addZero(time.getMinutes())+':'+addZero(time.getSeconds());
 	// формирование строки сообщения
 	message = '<div id="nodechat_mess_'+mess_id+'" class="nodechat_mess">';
@@ -108,8 +109,15 @@ exports.msg_format = function(msg, mess_id, name, user_group) {
 }
 
 // *** Формирование строки всех сообщений *** //
-exports.mess_line = function(msg) {
-	var mess_tmp = msg.concat(); // создаём временным массив
-	mess_tmp.reverse(); // разворачиваем его в обратном порядке
-	return mess_tmp.join(''); // формируем строку со всеми сообщениями
+exports.mess_line = function(redis) {
+	redis.hgetall("message",
+		function(err, row) {
+			var mess_line="";
+			for(var m in row) {
+				mess_line = row[m]+mess_line;
+			}
+			redis.set("mess_line", mess_line);
+		}
+	);
 }
+
