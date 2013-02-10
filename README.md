@@ -18,7 +18,7 @@ DLE NodeChat - Чат на основе nodejs для CMS DataLife Engine.
 - изменяемые размеры плавающего чата;
 - все настройки чата сохраняются у пользователя в куках;
 
-Пример работы: http://megafile.mksat.net/
+Пример работы: http://megafile.ws/
 
 
 Модули NodeJS:
@@ -35,5 +35,5 @@ DLE NodeChat - Чат на основе nodejs для CMS DataLife Engine.
 * jQuery + jQuery UI + jQuery UI CSS
 
 
-Инструкция по установке: https://github.com/MSergW/dle_nodechat/wiki/Install-DLE-NodeChat
+Инструкция по установке: http://0-web.ru/dle/free-mod-dle/285-dle-nodechat.html
 
