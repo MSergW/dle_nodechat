@@ -14,21 +14,14 @@
 =====================================================
 */
 
-var crypto = require('crypto'), // подключаем модуль для шифрования
-    fs = require('fs'); // подключаем модуль для работы с файловой системой
+var crypto = require('crypto'),	// подключаем модуль для шифрования
+    fs = require('fs');			// подключаем модуль для работы с файловой системой
 
 var redis = require("redis").createClient();
-redis.on("error", function (err) {
-    console.log("Error " + err);
-});
 
-redis.on("error", function (err) {
-	console.log("Error " + err);
-});
-
-var func = require('./functions'), // подключаем файл с функциями
-    lang = require('./language'),  // подключаем файл с языковыми переменными
-    config = require('./config');  // подключаем файл с настройками
+var func = require('./functions'),	// подключаем файл с функциями
+    lang = require('./language'),	// подключаем файл с языковыми переменными
+    config = require('./config');	// подключаем файл с настройками
 
 var app = require('express')(),
     server = require('http').createServer(app),
@@ -36,27 +29,23 @@ var app = require('express')(),
 
 server.listen(config.port);
 
-io.enable('browser client minification'); // сжатие *.js файлов
-io.enable('browser client etag');         // apply etag caching logic based on version number
-io.enable('browser client gzip');         // gzip the file
-io.set('log level', 0); // логировать только ошибки
+io.enable('browser client minification');	// сжатие *.js файлов
+io.enable('browser client etag');			// apply etag caching logic based on version number
+io.enable('browser client gzip');			// gzip the file
+io.set('log level', 0);						// логировать только ошибки
 io.set('heartbeat interval', 45);
 io.set('heartbeat timeout', 120);
 io.set('polling duration', 20);
 io.set('close timeout',120);
 
-var mysql = require('mysql'); // подключаем модуль для работы с MySQL
-var db = mysql.createConnection({ //параметры подключения к базе
+var mysql = require('mysql');			// подключаем модуль для работы с MySQL
+var db = mysql.createConnection({		//параметры подключения к базе
 	host     : config.mysql_host,		// хост MySQL
 	database : config.mysql_database,	// имя базы
 	user     : config.mysql_user,		// имя пользователя
 	password : config.mysql_password,	// пароль базы
 });
 db.query("SET SESSION wait_timeout = 604800;"); // 7 суток таймаут
-
-var messages = [], // массив сообщений
-    mess_line = "", // строка со всеми сообщениями
-    mess_id = 0; // айди сообщения
 
 var html_chat = fs.readFileSync( __dirname + '/html/chat.html', 'utf-8');
 
@@ -165,7 +154,9 @@ io.sockets.on('connection', function (socket) {
 															function(err, ids) {
 																ids.sort( function(a,b){return a - b} );
 																ids.splice(-config.mess_limit);
-																io.sockets.in('chat').emit( 'chat_msg2client', {del:ids.join(', ')} );
+																for(var id in ids) {
+																	io.sockets.in('chat').emit( 'chat_msg2client', {del:id} );
+																}
 																redis.hdel(["message", ids.join(', ')],
 																	function() {
 																		func.mess_line(redis);

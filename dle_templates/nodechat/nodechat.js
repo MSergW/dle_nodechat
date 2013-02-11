@@ -63,10 +63,7 @@ $(function(){
 			}, 5000);
 		} else {
 			if(data.del) {
-				var ids = data.del.split(', ');
-				for( var id in ids ) {
-					$('#nodechat_mess_'+id).remove();
-				}
+				$('#nodechat_mess_'+data.del).remove();
 			}
 			if(data.message) {
 				$('#nodechat_msg_list').prepend(data.message);
