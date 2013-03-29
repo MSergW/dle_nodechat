@@ -1,7 +1,7 @@
 /*
 =====================================================
  Модуль: NodeChat for DLE
- Версия: 1.2
+ Версия: 1.2.1
 -----------------------------------------------------
  Автор: MSW
  Сайт:  http://0-web.ru/
@@ -52,7 +52,7 @@ var html_chat = fs.readFileSync( __dirname + '/html/chat.html', 'utf-8');
 io.sockets.on('connection', function (socket) {
 	// ****** Идентификация пользователя ****** //
 	var cookies = func.parse_cookies(socket.handshake.headers.cookie);
-	var dle_user_id, dle_password, sessions;
+	var dle_user_id=0, dle_password=0, sessions;
 	if(parseInt(cookies.dle_user_id)>0 && cookies.dle_password!=0 ) {
 		db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(cookies.dle_user_id), function(err, rows) {
 			if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(cookies.dle_password).digest("hex") ) {
