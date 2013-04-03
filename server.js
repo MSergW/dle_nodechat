@@ -1,7 +1,7 @@
 /*
 =====================================================
  Модуль: NodeChat for DLE
- Версия: 1.2.1
+ Версия: 1.3
 -----------------------------------------------------
  Автор: MSW
  Сайт:  http://0-web.ru/
@@ -51,41 +51,32 @@ var html_chat = fs.readFileSync( __dirname + '/html/chat.html', 'utf-8');
 
 io.sockets.on('connection', function (socket) {
 	// ****** Идентификация пользователя ****** //
-	var cookies = func.parse_cookies(socket.handshake.headers.cookie);
 	var dle_user_id=0, dle_password=0, sessions;
-	if(parseInt(cookies.dle_user_id)>0 && cookies.dle_password!=0 ) {
-		db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(cookies.dle_user_id), function(err, rows) {
-			if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(cookies.dle_password).digest("hex") ) {
-				redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
-			} else {
-				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-			}
-		});
-	} else {
-		fs.readFile( config.dir_phpsess+cookies.PHPSESSID, 'utf-8', function (err, data) {
-			// *** Идентификация по данным куков *** //
-			if(err) {
-				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-			// *** Идентификация по данным сессии *** //
-			} else {
-				sessions = func.parse_session( data );
-				dle_user_id = sessions.dle_user_id;
-				dle_password = sessions.dle_password;
-			}
+	var cookies = func.parse_cookies(socket.handshake.headers.cookie);
+	fs.readFile( config.dir_phpsess+cookies.PHPSESSID, 'utf-8', function (err, data) {
+		// *** Идентификация по данным куков *** //
+		if(err) {
+			redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+		// *** Идентификация по данным сессии *** //
+		} else {
+			sessions = func.parse_session( data );
+			dle_user_id = sessions.dle_user_id;
+			dle_password = sessions.dle_password;
+		}
 
-			if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
-				db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
-					if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
-						redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); redis.expire(socket.id, 300); });
-					} else {
-						redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); redis.expire(socket.id, 300); });
-					}
-				});
-			} else {
-				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); redis.expire(socket.id, 300); });
-			}
-		});
-	}
+		if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
+			db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
+				if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
+					redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
+				} else {
+					redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+				}
+			});
+		} else {
+			redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+		}
+	});
+
 	// *** Подкючение к комнате чата *** //
 	socket.on('join2chat', function() {
 		socket.join('chat');
