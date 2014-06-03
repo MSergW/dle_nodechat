@@ -23,7 +23,6 @@ DLE NodeChat - Чат на основе nodejs для CMS DataLife Engine.
 
 Модули NodeJS:
 * socket.io
-* express
 * hiredis redis
 * node-mysql
 
