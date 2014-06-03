@@ -1,12 +1,12 @@
 /*
 =====================================================
  Модуль: NodeChat for DLE
- Версия: 1.3
+ Версия: 1.4
 -----------------------------------------------------
  Автор: MSW
  Сайт:  http://0-web.ru/
 -----------------------------------------------------
- Copyright (c) 2012-2013 MSW
+ Copyright (c) 2012-2014 MSW
 =====================================================
  Данный код защищен авторскими правами
 =====================================================
@@ -23,20 +23,8 @@ var func = require('./functions'),	// подключаем файл с функ�
     lang = require('./language'),	// подключаем файл с языковыми переменными
     config = require('./config');	// подключаем файл с настройками
 
-var app = require('express')(),
-    server = require('http').createServer(app),
-    io = require('socket.io').listen(server);
-
-server.listen(config.port);
-
-io.enable('browser client minification');	// сжатие *.js файлов
-io.enable('browser client etag');			// apply etag caching logic based on version number
-io.enable('browser client gzip');			// gzip the file
-io.set('log level', 0);						// логировать только ошибки
-io.set('heartbeat interval', 45);
-io.set('heartbeat timeout', 120);
-io.set('polling duration', 20);
-io.set('close timeout',120);
+var app = require('http').createServer(handler);
+var io = require('socket.io')(app);
 
 var mysql = require('mysql');			// подключаем модуль для работы с MySQL
 var db = mysql.createConnection({		//параметры подключения к базе
@@ -49,33 +37,39 @@ db.query("SET SESSION wait_timeout = 604800;"); // 7 суток таймаут
 
 var html_chat = fs.readFileSync( __dirname + '/html/chat.html', 'utf-8');
 
-io.sockets.on('connection', function (socket) {
+function handler (req, res) {
+	fs.readFile(__dirname + '/html/chat.html',
+	function (err, data) {
+		if (err) {
+			res.writeHead(500);
+			return res.end('Error loading chat.html');
+		}
+		res.writeHead(200);
+		res.end(data);
+	});
+}
+
+io.listen(config.port);
+
+io.on('connection', function(socket){
 	// ****** Идентификация пользователя ****** //
 	var dle_user_id=0, dle_password=0, sessions;
 	var cookies = func.parse_cookies(socket.handshake.headers.cookie);
-	fs.readFile( config.dir_phpsess+cookies.PHPSESSID, 'utf-8', function (err, data) {
-		// *** Идентификация по данным куков *** //
-		if(err) {
-			redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-		// *** Идентификация по данным сессии *** //
-		} else {
-			sessions = func.parse_session( data );
-			dle_user_id = sessions.dle_user_id;
-			dle_password = sessions.dle_password;
-		}
+	dle_user_id = cookies.dle_user_id;
+	dle_password = cookies.dle_password;
 
-		if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
-			db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
-				if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
-					redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
-				} else {
-					redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-				}
-			});
-		} else {
-			redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
-		}
-	});
+	if( parseInt(dle_user_id)>0 && dle_password!=0 ) {
+		db.query('SELECT name, password, user_id, user_group, restricted FROM '+config.mysql_prefix+'_users WHERE user_id='+db.escape(dle_user_id), function(err, rows) {
+			if( rows[0].user_id && rows[0].password && rows[0].password == crypto.createHash('md5').update(dle_password).digest("hex") ) {
+				redis.hmset(socket.id, {"name":""+rows[0].name+"", "user_id":""+rows[0].user_id+"", "user_group":""+rows[0].user_group+"", "restricted":""+rows[0].restricted+""}, function(){ socket.emit('chat_join', "true"); });
+			} else {
+				redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+			}
+		});
+	} else {
+		redis.hmset(socket.id, {"name":"guest", "user_id":"0", "user_group":"5", "restricted":"1"}, function(){ socket.emit('chat_join', "true"); });
+	}
+
 
 	// *** Подкючение к комнате чата *** //
 	socket.on('join2chat', function() {
@@ -88,9 +82,12 @@ io.sockets.on('connection', function (socket) {
 					if(err) {
 						console.log("err");
 					} else {
+						
 						if( +row>0 ) data = data.replace('!TEXTAREA!', lang.restricted);
 						else if( +row==0 ) data = data.replace('!TEXTAREA!', '<textarea id="nodechat_input"></textarea>');
 						else data = data.replace('!TEXTAREA!', lang.guest);
+						
+						//data = data.replace('!TEXTAREA!', '<textarea id="nodechat_input"></textarea>');
 						socket.emit('chat_init', data);
 					}
 				});
